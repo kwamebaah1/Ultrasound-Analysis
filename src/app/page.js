@@ -1,102 +1,220 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useRef } from 'react';
+import { FaUpload, FaSpinner, FaChartBar, FaInfoCircle } from 'react-icons/fa';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [image, setImage] = useState(null);
+  const [prediction, setPrediction] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [preview, setPreview] = useState('');
+  const fileInputRef = useRef(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.match('image.*')) {
+      setError('Please upload an image file');
+      return;
+    }
+
+    setError('');
+    setImage(file);
+    setPrediction('');
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => setPreview(e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handlePredict = async () => {
+    if (!image) {
+      setError('Please select an image first');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', image);
+      
+      // Simulate API call for demo (replace with your actual endpoint)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Mock prediction results for demo
+      const mockPredictions = {
+        benign: 72,
+        malignant: 28,
+        diagnosis: 'Likely Benign (BI-RADS 3)'
+      };
+      
+      setPrediction(mockPredictions);
+    } catch (err) {
+      setError('Failed to get prediction. Please try again.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center py-12 px-4">
+      <header className="w-full max-w-6xl mb-8">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          <span className="text-blue-600">Ultrasound</span> Analysis System
+        </h1>
+        <p className="text-gray-600">AI-powered breast ultrasound image analysis for early detection</p>
+      </header>
+
+      <main className="w-full max-w-6xl bg-white rounded-xl shadow-xl overflow-hidden">
+        <div className="grid md:grid-cols-2 gap-8 p-8">
+          {/* Image Upload Section */}
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center">
+            {preview ? (
+              <div className="relative w-full h-64 mb-4">
+                <img 
+                  src={preview} 
+                  alt="Uploaded ultrasound" 
+                  className="w-full h-full object-contain rounded-md"
+                />
+                <button 
+                  onClick={() => setPreview('')}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <FaUpload className="mx-auto text-4xl text-blue-400 mb-4" />
+                <p className="text-gray-500 mb-4">Upload your breast ultrasound image</p>
+              </div>
+            )}
+            
+            <input 
+              type="file" 
+              ref={fileInputRef}
+              onChange={handleImageUpload} 
+              accept="image/*"
+              className="hidden"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            
+            <button
+              onClick={triggerFileInput}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-full flex items-center"
+            >
+              <FaUpload className="mr-2" />
+              {image ? 'Change Image' : 'Select Image'}
+            </button>
+            
+            {image && (
+              <p className="mt-2 text-sm text-gray-500">
+                {image.name} ({(image.size / 1024).toFixed(1)} KB)
+              </p>
+            )}
+          </div>
+          
+          {/* Analysis Section */}
+          <div className="bg-gray-50 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              <FaChartBar className="text-blue-500 mr-2" />
+              Analysis Results
+            </h2>
+            
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <FaSpinner className="animate-spin text-4xl text-blue-500 mb-4" />
+                <p className="text-gray-600">Analyzing ultrasound image...</p>
+              </div>
+            ) : prediction ? (
+              <div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Diagnosis</h3>
+                  <div className={`p-4 rounded-lg ${
+                    prediction.diagnosis.includes('Benign') 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    <p className="font-bold">{prediction.diagnosis}</p>
+                  </div>
+                </div>
+                
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-700 mb-3">Probability Distribution</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span>Benign</span>
+                        <span>{prediction.benign}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-green-500 h-2.5 rounded-full" 
+                          style={{ width: `${prediction.benign}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span>Malignant</span>
+                        <span>{prediction.malignant}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-red-500 h-2.5 rounded-full" 
+                          style={{ width: `${prediction.malignant}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 flex items-start">
+                  <FaInfoCircle className="mr-2 mt-0.5 flex-shrink-0" />
+                  <p>This analysis is for preliminary assessment only. Please consult with a medical professional for definitive diagnosis.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="bg-blue-100 p-4 rounded-full mb-4">
+                  <FaChartBar className="text-blue-600 text-2xl" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-700 mb-2">No analysis yet</h3>
+                <p className="text-gray-500 mb-4">Upload an ultrasound image and click predict to get results</p>
+                <button
+                  onClick={handlePredict}
+                  disabled={!image}
+                  className={`py-2 px-6 rounded-full font-medium flex items-center ${
+                    image 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  Analyze Image
+                </button>
+              </div>
+            )}
+            
+            {error && (
+              <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+          </div>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      
+      <footer className="mt-12 text-center text-gray-500 text-sm">
+        <p>Medical AI Analysis System v1.0 • For research and testing purposes only</p>
       </footer>
     </div>
   );
