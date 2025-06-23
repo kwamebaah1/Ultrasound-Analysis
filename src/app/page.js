@@ -43,17 +43,17 @@ export default function Home() {
       const formData = new FormData();
       formData.append('image', image);
       
-      // Simulate API call for demo (replace with your actual endpoint)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Mock prediction results for demo
-      const mockPredictions = {
-        benign: 72,
-        malignant: 28,
-        diagnosis: 'Likely Benign (BI-RADS 3)'
-      };
-      
-      setPrediction(mockPredictions);
+      const response = await fetch('https://kbaah7-ultrasound-analysis.hf.space/predict', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      setPrediction(result);
     } catch (err) {
       setError('Failed to get prediction. Please try again.');
       console.error(err);
