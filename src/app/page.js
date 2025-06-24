@@ -1,15 +1,38 @@
 'use client'
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FaUpload, FaSpinner, FaChartBar, FaInfoCircle } from 'react-icons/fa';
 
 export default function Home() {
   const [image, setImage] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState('');
   const [error, setError] = useState('');
   const [preview, setPreview] = useState('');
   const fileInputRef = useRef(null);
+
+  // Simulated loading steps
+  const loadingSteps = [
+    "Uploading image to server...",
+    "Analyzing image features...",
+    "Processing tissue patterns...",
+    "Generating diagnosis...",
+    "Preparing explanation...",
+    "Finalizing results..."
+  ];
+
+  useEffect(() => {
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      if (isLoading && currentStep < loadingSteps.length) {
+        setLoadingProgress(loadingSteps[currentStep]);
+        currentStep++;
+      }
+    }, 1500); // Rotate through steps every 1.5 seconds
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -38,6 +61,7 @@ export default function Home() {
     
     setIsLoading(true);
     setError('');
+    setLoadingProgress(loadingSteps[0]);
     
     try {
       const formData = new FormData();
@@ -54,15 +78,16 @@ export default function Home() {
 
       const result = await response.json();
       
-      // Process the API response with the new format
+      // Process the API response
       const processedResult = {
         diagnosis: result.diagnosis,
         benign: result.benign_prob,
         malignant: result.malignant_prob,
         confidence: result.confidence,
-        explanation: result.diagnosis === 'Benign' 
-          ? 'The model detected patterns consistent with benign tissue, showing no concerning features.' 
-          : 'The model identified suspicious patterns that may indicate malignant tissue, requiring further evaluation.'
+        explanation: result.explanation || 
+          (result.diagnosis === 'Benign' 
+            ? 'The model detected patterns consistent with benign tissue.' 
+            : 'The model identified suspicious patterns that may indicate malignant tissue.')
       };
       
       setPrediction(processedResult);
@@ -71,6 +96,7 @@ export default function Home() {
       console.error(err);
     } finally {
       setIsLoading(false);
+      setLoadingProgress('');
     }
   };
 
@@ -143,9 +169,28 @@ export default function Home() {
             </h2>
             
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <FaSpinner className="animate-spin text-4xl text-blue-500 mb-4" />
-                <p className="text-gray-600">Analyzing ultrasound image...</p>
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="relative mb-6">
+                  <FaSpinner className="animate-spin text-4xl text-blue-500" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-bold text-blue-700">
+                      {Math.floor((loadingSteps.indexOf(loadingProgress) / loadingSteps.length) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-center mb-2">{loadingProgress}</p>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                  <div 
+                    className="bg-blue-600 h-1.5 rounded-full" 
+                    style={{ 
+                      width: `${(loadingSteps.indexOf(loadingProgress) / (loadingSteps.length - 1) * 100)}%`,
+                      transition: 'width 0.5s ease-in-out'
+                    }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-500 mt-4">
+                  This may take a moment as we carefully analyze your ultrasound...
+                </p>
               </div>
             ) : prediction ? (
               <div>
