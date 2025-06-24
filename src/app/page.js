@@ -54,14 +54,15 @@ export default function Home() {
 
       const result = await response.json();
       
-      // Handle the API response structure
+      // Process the API response with the new format
       const processedResult = {
-        diagnosis: result.prediction || result.diagnosis || result,
-        benign: result.prediction === 'Benign' ? 85 : 15,
-        malignant: result.prediction === 'Malignant' ? 85 : 15,
-        explanation: 'The model detected patterns consistent with ' + 
-                    (result.prediction || 'benign').toLowerCase() + ' tissue.',
-        confidence: 0.92
+        diagnosis: result.diagnosis,
+        benign: result.benign_prob,
+        malignant: result.malignant_prob,
+        confidence: result.confidence,
+        explanation: result.diagnosis === 'Benign' 
+          ? 'The model detected patterns consistent with benign tissue, showing no concerning features.' 
+          : 'The model identified suspicious patterns that may indicate malignant tissue, requiring further evaluation.'
       };
       
       setPrediction(processedResult);
@@ -121,7 +122,7 @@ export default function Home() {
             
             <button
               onClick={triggerFileInput}
-              className="bg-blue-600 hover:bg-blue-700 cursor pointer text-white font-medium py-2 px-6 rounded-full flex items-center"
+              className="bg-blue-600 hover:bg-blue-700 cursor-pointer text-white font-medium py-2 px-6 rounded-full flex items-center"
             >
               <FaUpload className="mr-2" />
               {image ? 'Change Image' : 'Select Image'}
@@ -151,42 +152,42 @@ export default function Home() {
                 <div className="mb-6">
                   <h3 className="text-lg font-medium text-gray-700 mb-2">Diagnosis</h3>
                   <div className={`p-4 rounded-lg ${
-                    prediction.diagnosis && prediction.diagnosis.includes('Benign') 
+                    prediction.diagnosis === 'Benign'
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    <p className="font-bold">{prediction.diagnosis}</p>
-                    {prediction.confidence && (
-                      <p className="text-sm mt-1">
-                        Confidence: {(prediction.confidence * 100).toFixed(1)}%
-                      </p>
-                    )}
+                    <div className="flex justify-between items-center">
+                      <p className="font-bold text-lg">{prediction.diagnosis}</p>
+                      <span className="text-sm bg-white px-2 py-1 rounded-full font-medium">
+                        Confidence: {prediction.confidence.toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
                 </div>
                 
                 <div className="mb-6">
                   <h3 className="text-lg font-medium text-gray-700 mb-3">Probability Distribution</h3>
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span>Benign</span>
-                        <span>{prediction.benign}%</span>
+                        <span className="font-medium">Benign</span>
+                        <span className="font-medium">{prediction.benign.toFixed(1)}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
-                          className="bg-green-500 h-2.5 rounded-full" 
+                          className="bg-green-500 h-3 rounded-full" 
                           style={{ width: `${prediction.benign}%` }}
                         ></div>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span>Malignant</span>
-                        <span>{prediction.malignant}%</span>
+                        <span className="font-medium">Malignant</span>
+                        <span className="font-medium">{prediction.malignant.toFixed(1)}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
-                          className="bg-red-500 h-2.5 rounded-full" 
+                          className="bg-red-500 h-3 rounded-full" 
                           style={{ width: `${prediction.malignant}%` }}
                         ></div>
                       </div>
@@ -194,14 +195,12 @@ export default function Home() {
                   </div>
                 </div>
                 
-                {prediction.explanation && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-700 mb-2">Explanation</h3>
-                    <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
-                      {prediction.explanation}
-                    </div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Explanation</h3>
+                  <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
+                    {prediction.explanation}
                   </div>
-                )}
+                </div>
                 
                 <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 flex items-start">
                   <FaInfoCircle className="mr-2 mt-0.5 flex-shrink-0" />
