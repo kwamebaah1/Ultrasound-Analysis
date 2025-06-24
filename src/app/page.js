@@ -215,7 +215,7 @@ export default function Home() {
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="font-medium">Benign</span>
+                        <span className="font-medium text-gray-700">Benign</span>
                         <span className="font-medium">{prediction.benign.toFixed(1)}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
@@ -227,7 +227,7 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="font-medium">Malignant</span>
+                        <span className="font-medium text-gray-700">Malignant</span>
                         <span className="font-medium">{prediction.malignant.toFixed(1)}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
