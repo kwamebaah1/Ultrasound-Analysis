@@ -4,6 +4,122 @@ import { useState, useRef, useEffect } from 'react';
 import { FaUpload, FaSpinner, FaChartBar, FaInfoCircle } from 'react-icons/fa';
 import ChatBot from './components/ChatBot';
 
+// New components for better organization
+const LoadingIndicator = ({ steps, currentStep }) => {
+  const progress = ((steps.indexOf(currentStep) + 1) / steps.length) * 100;
+  
+  return (
+    <div className="flex flex-col items-center justify-center py-8">
+      <div className="relative mb-6 w-16 h-16">
+        <div className="absolute inset-0 rounded-full border-4 border-teal-100"></div>
+        <FaSpinner className="absolute inset-0 m-auto animate-spin text-3xl text-teal-600" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-sm font-bold text-teal-700">
+            {Math.floor(progress)}%
+          </span>
+        </div>
+      </div>
+      <p className="text-gray-600 text-center mb-2 max-w-xs">{currentStep}</p>
+      <div className="w-full bg-gray-100 rounded-full h-2 mt-2 max-w-xs">
+        <div 
+          className="bg-gradient-to-r from-teal-500 to-blue-600 h-2 rounded-full" 
+          style={{ 
+            width: `${progress}%`,
+            transition: 'width 0.5s ease-in-out'
+          }}
+        ></div>
+      </div>
+      <p className="text-sm text-gray-500 mt-4">
+        Analyzing with precision...
+      </p>
+    </div>
+  );
+};
+
+const DiagnosisResult = ({ diagnosis, confidence }) => {
+  return (
+    <div className={`p-4 rounded-lg border-l-4 ${
+      diagnosis === 'Benign'
+        ? 'border-green-500 bg-green-50 text-green-800' 
+        : 'border-red-500 bg-red-50 text-red-800'
+    }`}>
+      <div className="flex justify-between items-center">
+        <p className="font-bold text-lg">{diagnosis}</p>
+        <span className="text-sm bg-white px-3 py-1 rounded-full font-medium shadow-sm">
+          Confidence: {confidence.toFixed(1)}%
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const ProbabilityBar = ({ label, value, color }) => {
+  const gradient = {
+    green: 'from-green-400 to-green-600',
+    red: 'from-red-400 to-red-600',
+    blue: 'from-blue-400 to-blue-600'
+  }[color];
+
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between mb-1">
+        <span className="font-medium text-gray-700">{label}</span>
+        <span className="font-medium">{value.toFixed(1)}%</span>
+      </div>
+      <div className="w-full bg-gray-100 rounded-full h-2.5">
+        <div 
+          className={`bg-gradient-to-r ${gradient} h-2.5 rounded-full`} 
+          style={{ width: `${value}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+};
+
+const UploadArea = ({ preview, triggerFileInput, image, setPreview }) => {
+  return (
+    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center transition-all hover:border-teal-300 hover:bg-teal-50/50">
+      {preview ? (
+        <div className="relative w-full h-64 mb-4 group">
+          <img 
+            src={preview} 
+            alt="Uploaded ultrasound" 
+            className="w-full h-full object-contain rounded-lg shadow-sm"
+          />
+          <button 
+            onClick={() => setPreview('')}
+            className="absolute top-3 right-3 bg-white/90 text-gray-600 rounded-full p-1.5 hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-md"
+          >
+            ×
+          </button>
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <div className="mx-auto mb-4 w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center">
+            <FaUpload className="text-2xl text-teal-600" />
+          </div>
+          <p className="text-gray-500 mb-4">Upload breast ultrasound image</p>
+          <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+        </div>
+      )}
+      
+      <button
+        onClick={triggerFileInput}
+        className="mt-4 bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-medium py-2.5 px-8 rounded-full flex items-center shadow-md hover:shadow-lg transition-all"
+      >
+        <FaUpload className="mr-2" />
+        {image ? 'Change Image' : 'Select Image'}
+      </button>
+      
+      {image && (
+        <p className="mt-3 text-sm text-gray-500">
+          {image.name} ({(image.size / 1024).toFixed(1)} KB)
+        </p>
+      )}
+    </div>
+  );
+};
+
 export default function Home() {
   const [image, setImage] = useState(null);
   const [prediction, setPrediction] = useState(null);
@@ -13,7 +129,6 @@ export default function Home() {
   const [preview, setPreview] = useState('');
   const fileInputRef = useRef(null);
 
-  // Simulated loading steps
   const loadingSteps = [
     "Uploading image to server...",
     "Analyzing image features...",
@@ -30,7 +145,7 @@ export default function Home() {
         setLoadingProgress(loadingSteps[currentStep]);
         currentStep++;
       }
-    }, 1500); // Rotate through steps every 1.5 seconds
+    }, 1500);
 
     return () => clearInterval(interval);
   }, [isLoading]);
@@ -40,7 +155,12 @@ export default function Home() {
     if (!file) return;
     
     if (!file.type.match('image.*')) {
-      setError('Please upload an image file');
+      setError('Please upload an image file (PNG or JPG)');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size should be less than 5MB');
       return;
     }
 
@@ -48,7 +168,6 @@ export default function Home() {
     setImage(file);
     setPrediction(null);
     
-    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target.result);
     reader.readAsDataURL(file);
@@ -104,7 +223,7 @@ export default function Home() {
       
       setPrediction(processedResult);
     } catch (err) {
-      setError('Failed to get prediction. Please try again.');
+      setError('Failed to get prediction. Please try again later.');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -117,38 +236,28 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center py-8 px-4 sm:px-6 lg:px-8">
       <header className="w-full max-w-6xl mb-8 text-center">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">
-          <span className="text-blue-600">Ultrasound</span> Analysis System
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+          <span className="bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+            Ultrasound Analysis System
+          </span>
         </h1>
-        <p className="text-gray-600">AI-powered breast ultrasound image analysis for early detection</p>
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          Advanced AI-powered breast ultrasound analysis for early detection and assessment
+        </p>
       </header>
 
-      <main className="w-full max-w-6xl bg-white rounded-xl shadow-xl overflow-hidden">
-        <div className="grid md:grid-cols-2 gap-8 p-8">
+      <main className="w-full max-w-6xl bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="grid md:grid-cols-2 gap-0 md:gap-8 p-6 md:p-8">
           {/* Image Upload Section */}
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center">
-            {preview ? (
-              <div className="relative w-full h-64 mb-4">
-                <img 
-                  src={preview} 
-                  alt="Uploaded ultrasound" 
-                  className="w-full h-full object-contain rounded-md"
-                />
-                <button 
-                  onClick={() => setPreview('')}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                >
-                  ×
-                </button>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <FaUpload className="mx-auto text-4xl text-blue-400 mb-4" />
-                <p className="text-gray-500 mb-4">Upload your breast ultrasound image</p>
-              </div>
-            )}
+          <div className="mb-8 md:mb-0">
+            <UploadArea 
+              preview={preview}
+              triggerFileInput={triggerFileInput}
+              image={image}
+              setPreview={setPreview}
+            />
             
             <input 
               type="file" 
@@ -157,132 +266,63 @@ export default function Home() {
               accept="image/*"
               className="hidden"
             />
-            
-            <button
-              onClick={triggerFileInput}
-              className="bg-blue-600 hover:bg-blue-700 cursor-pointer text-white font-medium py-2 px-6 rounded-full flex items-center"
-            >
-              <FaUpload className="mr-2" />
-              {image ? 'Change Image' : 'Select Image'}
-            </button>
-            
-            {image && (
-              <p className="mt-2 text-sm text-gray-500">
-                {image.name} ({(image.size / 1024).toFixed(1)} KB)
-              </p>
-            )}
           </div>
           
           {/* Analysis Section */}
-          <div className="bg-gray-50 rounded-lg p-6">
+          <div className="bg-gray-50 rounded-xl p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-              <FaChartBar className="text-blue-500 mr-2" />
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center mr-3">
+                <FaChartBar className="text-teal-600" />
+              </div>
               Analysis Results
             </h2>
             
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="relative mb-6">
-                  <FaSpinner className="animate-spin text-4xl text-blue-500" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-bold text-blue-700">
-                      {Math.floor((loadingSteps.indexOf(loadingProgress) / loadingSteps.length) * 100)}%
-                    </span>
-                  </div>
-                </div>
-                <p className="text-gray-600 text-center mb-2">{loadingProgress}</p>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                  <div 
-                    className="bg-blue-600 h-1.5 rounded-full" 
-                    style={{ 
-                      width: `${(loadingSteps.indexOf(loadingProgress) / (loadingSteps.length - 1) * 100)}%`,
-                      transition: 'width 0.5s ease-in-out'
-                    }}
-                  ></div>
-                </div>
-                <p className="text-sm text-gray-500 mt-4">
-                  This may take a moment as we carefully analyze your ultrasound...
-                </p>
-              </div>
+              <LoadingIndicator steps={loadingSteps} currentStep={loadingProgress} />
             ) : prediction ? (
-              <div>
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">Diagnosis</h3>
-                  <div className={`p-4 rounded-lg ${
-                    prediction.diagnosis === 'Benign'
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    <div className="flex justify-between items-center">
-                      <p className="font-bold text-lg">{prediction.diagnosis}</p>
-                      <span className="text-sm bg-white px-2 py-1 rounded-full font-medium">
-                        Confidence: {prediction.confidence.toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              <div className="space-y-6">
+                <DiagnosisResult diagnosis={prediction.diagnosis} confidence={prediction.confidence} />
                 
-                <div className="mb-6">
+                <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-3">Probability Distribution</h3>
                   <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="font-medium text-gray-700">Benign</span>
-                        <span className="font-medium">{prediction.benign.toFixed(1)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-green-500 h-3 rounded-full" 
-                          style={{ width: `${prediction.benign}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="font-medium text-gray-700">Malignant</span>
-                        <span className="font-medium">{prediction.malignant.toFixed(1)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-red-500 h-3 rounded-full" 
-                          style={{ width: `${prediction.malignant}%` }}
-                        ></div>
-                      </div>
-                    </div>
+                    <ProbabilityBar label="Benign" value={prediction.benign} color="green" />
+                    <ProbabilityBar label="Malignant" value={prediction.malignant} color="red" />
                   </div>
                 </div>
                 
-                <div className="mb-6">
+                <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-2">Explanation</h3>
-                  <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
+                  <div className="bg-blue-50/70 p-4 rounded-lg text-sm text-blue-800 border border-blue-100">
                     {prediction.advice}
                   </div>
                 </div>
+                
                 <ChatBot 
                   initialAdvice={prediction.advice}
                   diagnosis={prediction.diagnosis}
                   confidence={prediction.confidence}
                 />
                 
-                <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 flex items-start">
-                  <FaInfoCircle className="mr-2 mt-0.5 flex-shrink-0" />
+                <div className="bg-blue-50/70 p-4 rounded-lg text-sm text-blue-800 flex items-start border border-blue-100">
+                  <FaInfoCircle className="mr-2 mt-0.5 flex-shrink-0 text-blue-500" />
                   <p>This analysis is for preliminary assessment only. Please consult with a medical professional for definitive diagnosis.</p>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="bg-blue-100 p-4 rounded-full mb-4">
-                  <FaChartBar className="text-blue-600 text-2xl" />
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-4">
+                  <FaChartBar className="text-teal-600 text-xl" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-700 mb-2">No analysis yet</h3>
-                <p className="text-gray-500 mb-4">Upload an ultrasound image and click predict to get results</p>
+                <p className="text-gray-500 mb-6 max-w-xs">Upload an ultrasound image and click analyze to get results</p>
                 <button
                   onClick={handlePredict}
                   disabled={!image}
-                  className={`py-2 px-6 rounded-full font-medium flex items-center ${
+                  className={`py-2.5 px-8 rounded-full font-medium flex items-center transition-all ${
                     image 
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white shadow-md hover:shadow-lg' 
+                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                   }`}
                 >
                   Analyze Image
@@ -291,7 +331,7 @@ export default function Home() {
             )}
             
             {error && (
-              <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+              <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-100">
                 {error}
               </div>
             )}
@@ -299,8 +339,8 @@ export default function Home() {
         </div>
       </main>
       
-      <footer className="mt-12 text-center text-gray-500 text-sm">
-        <p>Medical AI Analysis System v1.0 • For research and testing purposes only</p>
+      <footer className="mt-8 text-center text-gray-500 text-sm">
+        <p>© {new Date().getFullYear()} Medical AI Analysis System • For clinical support use only</p>
       </footer>
     </div>
   );
