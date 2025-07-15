@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { FaUpload, FaSpinner, FaChartBar, FaInfoCircle } from 'react-icons/fa';
+import ChatBot from './components/ChatBot';
 
 export default function Home() {
   const [image, setImage] = useState(null);
@@ -77,17 +78,28 @@ export default function Home() {
       }
 
       const result = await response.json();
+
+      const initialPrompt = `Explain briefly and clearly what it means when a deep learning model diagnoses a breast ultrasound as "${result.diagnosis}" with ${result.confidence.toFixed(1)}% confidence. Respond in under 3 sentences and end by inviting the user to ask for more details if needed.`;
       
-      // Process the API response
+      const chatResponse = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: 'You are a helpful medical assistant who provides brief and clear explanations to patients in simple terms. Keep responses concise and friendly.' },
+            { role: 'user', content: initialPrompt }
+          ]
+        })
+      });
+
+      const chatData = await chatResponse.json();
+
       const processedResult = {
         diagnosis: result.diagnosis,
         benign: result.benign_prob,
         malignant: result.malignant_prob,
         confidence: result.confidence,
-        explanation: result.explanation || 
-          (result.diagnosis === 'Benign' 
-            ? 'The model detected patterns consistent with benign tissue.' 
-            : 'The model identified suspicious patterns that may indicate malignant tissue.')
+        advice: chatData.assistant || 'No additional insight provided.'
       };
       
       setPrediction(processedResult);
@@ -243,9 +255,10 @@ export default function Home() {
                 <div className="mb-6">
                   <h3 className="text-lg font-medium text-gray-700 mb-2">Explanation</h3>
                   <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
-                    {prediction.explanation}
+                    {prediction.advice}
                   </div>
                 </div>
+                <ChatBot initialAdvice={prediction.advice} />
                 
                 <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 flex items-start">
                   <FaInfoCircle className="mr-2 mt-0.5 flex-shrink-0" />
