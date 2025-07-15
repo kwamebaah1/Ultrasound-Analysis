@@ -1,7 +1,8 @@
 'use client';
+
 import { useState } from 'react';
 
-export default function ChatBot({ initialAdvice }) {
+export default function ChatBot({ initialAdvice, diagnosis, confidence }) {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: initialAdvice }
   ]);
@@ -20,7 +21,11 @@ export default function ChatBot({ initialAdvice }) {
       const response = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages })
+        body: JSON.stringify({
+          diagnosis,
+          confidence,
+          messages: newMessages
+        })
       });
 
       const result = await response.json();

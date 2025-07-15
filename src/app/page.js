@@ -258,7 +258,11 @@ export default function Home() {
                     {prediction.advice}
                   </div>
                 </div>
-                <ChatBot initialAdvice={prediction.advice} />
+                <ChatBot 
+                  initialAdvice={prediction.advice}
+                  diagnosis={prediction.diagnosis}
+                  confidence={prediction.confidence}
+                />
                 
                 <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 flex items-start">
                   <FaInfoCircle className="mr-2 mt-0.5 flex-shrink-0" />
