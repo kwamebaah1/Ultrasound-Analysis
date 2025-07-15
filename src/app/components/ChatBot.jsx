@@ -10,32 +10,45 @@ export default function ChatBot({ initialAdvice, diagnosis, confidence }) {
   const [loading, setLoading] = useState(false);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+  if (!input.trim()) return;
 
-    const newMessages = [...messages, { role: 'user', content: input }];
+  const newMessages = [...messages, { role: 'user', content: input }];
     setMessages(newMessages);
     setInput('');
     setLoading(true);
 
+    const filteredMessages = newMessages
+        .filter((msg, idx) => msg.role && msg.content?.trim() && !(idx === 0 && msg.role === 'assistant')) // remove initial assistant
+        .slice(-4); // last 4 clean messages
+
     try {
-      const response = await fetch('/api/chatbot', {
+        const response = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          diagnosis,
-          confidence,
-          messages: newMessages
-        })
-      });
+            messages: [
+            {
+                role: 'system',
+                content: diagnosis && confidence
+                ? `You are a helpful medical assistant. Assume the user is referring to a breast ultrasound diagnosis of "${diagnosis}" with ${confidence.toFixed(1)}% confidence unless otherwise specified. Be empathetic, brief, and guide users clearly.`
+                : 'You are a helpful medical assistant.',
+            },
+            ...filteredMessages
+            ]
+        }),
+        });
 
-      const result = await response.json();
-      if (result.assistant) {
+        const result = await response.json();
+
+        if (result.assistant) {
         setMessages([...newMessages, { role: 'assistant', content: result.assistant }]);
-      }
+        } else if (result.error) {
+        console.error('Assistant returned error:', result.error, result.details);
+        }
     } catch (err) {
-      console.error('Chatbot error:', err);
+        console.error('Chatbot error:', err);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
