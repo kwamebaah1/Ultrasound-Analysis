@@ -19,7 +19,7 @@ const pollHeatmap = async (id) => {
       setHeatmapLoading(false);
       clearInterval(interval);
     }
-  }, 2000);
+  }, 5000);
 };
 
-export default pollHeatmap;
+export default pollHeatmap

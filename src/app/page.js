@@ -5,6 +5,7 @@ import { FaUpload, FaSpinner, FaChartBar, FaInfoCircle } from 'react-icons/fa';
 import ChatBot from './components/ChatBot';
 import LoadingIndicator from './components/LoadingIndicator';
 import DiagnosisResult from './components/DiagnosisResult';
+import pollHeatmap from './components/Heatmap';
 
 const ProbabilityBar = ({ label, value, color }) => {
   const gradient = {
@@ -76,6 +77,8 @@ const UploadArea = ({ preview, triggerFileInput, image, setPreview }) => {
 export default function Home() {
   const [image, setImage] = useState(null);
   const [prediction, setPrediction] = useState(null);
+  const [heatmapUrl, setHeatmapUrl] = useState(null);
+  const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState('');
   const [error, setError] = useState('');
@@ -150,6 +153,20 @@ export default function Home() {
       }
 
       const result = await response.json();
+
+      console.log('predict result:', result);
+
+      if (result.id) {
+        setHeatmapUrl(null);
+
+        if (result.diagnosis === 'Malignant') {
+          setHeatmapLoading(true);
+          pollHeatmap(result.id);
+        } else {
+          setHeatmapLoading(false);
+          setHeatmapUrl(null);
+        }
+      }
 
       const initialPrompt = `Explain briefly and clearly what it means when a deep learning model diagnoses a breast ultrasound as "${result.diagnosis}" with ${result.confidence.toFixed(1)}% confidence. Respond in under 3 sentences and end by inviting the user to ask for more details if needed.`;
       
@@ -242,6 +259,15 @@ export default function Home() {
                     <ProbabilityBar label="Benign" value={prediction.benign} color="green" />
                     <ProbabilityBar label="Malignant" value={prediction.malignant} color="red" />
                   </div>
+                  {heatmapLoading && (
+                    <div className="text-center py-4 text-sm text-gray-500">Generating heatmap...</div>
+                  )}
+                  {heatmapUrl && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-700 mb-2">Heatmap</h3>
+                      <img src={heatmapUrl} alt="Grad-CAM Heatmap" className="w-full rounded-lg shadow-sm" />
+                    </div>
+                  )}
                 </div>
                 
                 <div>
