@@ -3,55 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { FaUpload, FaSpinner, FaChartBar, FaInfoCircle } from 'react-icons/fa';
 import ChatBot from './components/ChatBot';
-
-// New components for better organization
-const LoadingIndicator = ({ steps, currentStep }) => {
-  const progress = ((steps.indexOf(currentStep) + 1) / steps.length) * 100;
-  
-  return (
-    <div className="flex flex-col items-center justify-center py-8">
-      <div className="relative mb-6 w-16 h-16">
-        <div className="absolute inset-0 rounded-full border-4 border-teal-100"></div>
-        <FaSpinner className="absolute inset-0 m-auto animate-spin text-3xl text-teal-600" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-bold text-teal-700">
-            {Math.floor(progress)}%
-          </span>
-        </div>
-      </div>
-      <p className="text-gray-600 text-center mb-2 max-w-xs">{currentStep}</p>
-      <div className="w-full bg-gray-100 rounded-full h-2 mt-2 max-w-xs">
-        <div 
-          className="bg-gradient-to-r from-teal-500 to-blue-600 h-2 rounded-full" 
-          style={{ 
-            width: `${progress}%`,
-            transition: 'width 0.5s ease-in-out'
-          }}
-        ></div>
-      </div>
-      <p className="text-sm text-gray-500 mt-4">
-        Analyzing with precision...
-      </p>
-    </div>
-  );
-};
-
-const DiagnosisResult = ({ diagnosis, confidence }) => {
-  return (
-    <div className={`p-4 rounded-lg border-l-4 ${
-      diagnosis === 'Benign'
-        ? 'border-green-500 bg-green-50 text-green-800' 
-        : 'border-red-500 bg-red-50 text-red-800'
-    }`}>
-      <div className="flex justify-between items-center">
-        <p className="font-bold text-lg">{diagnosis}</p>
-        <span className="text-sm bg-white px-3 py-1 rounded-full font-medium shadow-sm">
-          Confidence: {confidence.toFixed(1)}%
-        </span>
-      </div>
-    </div>
-  );
-};
+import LoadingIndicator from './components/LoadingIndicator';
+import DiagnosisResult from './components/DiagnosisResult';
 
 const ProbabilityBar = ({ label, value, color }) => {
   const gradient = {
