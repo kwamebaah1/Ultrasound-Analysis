@@ -1,6 +1,6 @@
 const pollHeatmap = async (id) => {
   let attempts = 0;
-  const maxAttempts = 20;
+  const maxAttempts = 8;
   const interval = setInterval(async () => {
     attempts++;
     try {
@@ -19,7 +19,7 @@ const pollHeatmap = async (id) => {
       setHeatmapLoading(false);
       clearInterval(interval);
     }
-  }, 5000);
+  }, 8000);
 };
 
 export default pollHeatmap
