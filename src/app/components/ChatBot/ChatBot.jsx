@@ -14,46 +14,46 @@ const ChatBot = ({ initialAdvice, diagnosis, confidence }) => {
   const [showFullPage, setShowFullPage] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+  if (!input.trim()) return;
 
-    const userMessage = { role: 'user', content: input };
-    const newMessages = [...messages, userMessage];
+  const newMessages = [...messages, { role: 'user', content: input }];
     setMessages(newMessages);
     setInput('');
     setLoading(true);
 
+    const filteredMessages = newMessages
+        .filter((msg, idx) => msg.role && msg.content?.trim() && !(idx === 0 && msg.role === 'assistant'))
+        .slice(-3);
+
     try {
-      const response = await fetch('/api/chatbot', {
+        const response = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [
+            messages: [
             {
-              role: 'system',
-              content: `You are a medical assistant. The current diagnosis is ${diagnosis} with ${confidence}% confidence. 
-              Keep responses concise (1-3 sentences) unless asked for more detail.`
+                role: 'system',
+                content: diagnosis && confidence
+                ? `You are a helpful medical assistant. Assume the user is referring to a breast ultrasound diagnosis of "${diagnosis}" with ${confidence.toFixed(1)}% confidence unless otherwise specified. Be empathetic, brief, and guide users clearly.`
+                : 'You are a helpful medical assistant.',
             },
-            ...newMessages.slice(-4)
-          ]
-        })
-      });
+            ...filteredMessages
+            ]
+        }),
+        });
 
-      const data = await response.json();
-      if (data.assistant) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.assistant }]);
-      }
-    } catch (error) {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: "Sorry, I encountered an error. Please try again." 
-      }]);
+        const result = await response.json();
+
+        if (result.assistant) {
+        setMessages([...newMessages, { role: 'assistant', content: result.assistant }]);
+        } else if (result.error) {
+        console.error('Assistant returned error:', result.error, result.details);
+        }
+    } catch (err) {
+        console.error('Chatbot error:', err);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
