@@ -22,14 +22,14 @@ const HeatmapVisualization = ({ heatmapUrl, diagnosis }) => {
         <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => setScale(Math.min(scale + 0.1, 2))}
-            className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+            className="p-2 bg-white rounded-full text-gray-700 shadow-md hover:bg-gray-100"
             title="Zoom in"
           >
             <FiZoomIn />
           </button>
           <button
             onClick={() => setScale(Math.max(scale - 0.1, 0.5))}
-            className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+            className="p-2 bg-white rounded-full text-gray-700 shadow-md hover:bg-gray-100"
             title="Zoom out"
           >
             <FiZoomOut />
@@ -37,14 +37,14 @@ const HeatmapVisualization = ({ heatmapUrl, diagnosis }) => {
           <a
             href={heatmapUrl}
             download={`heatmap-${diagnosis.toLowerCase()}.png`}
-            className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+            className="p-2 bg-white rounded-full text-gray-700 shadow-md hover:bg-gray-100"
             title="Download"
           >
             <FiDownload />
           </a>
           <button
             onClick={() => setShowInfo(!showInfo)}
-            className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+            className="p-2 bg-white rounded-full text-gray-700 shadow-md hover:bg-gray-100"
             title="Info"
           >
             <FiInfo />
