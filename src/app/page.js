@@ -154,18 +154,9 @@ export default function Home() {
 
       const result = await response.json();
 
-      console.log('predict result:', result);
-
-      if (result.id) {
-        setHeatmapUrl(null);
-
-        if (result.diagnosis === 'Malignant') {
-          setHeatmapLoading(true);
-          pollHeatmap(result.id);
-        } else {
-          setHeatmapLoading(false);
-          setHeatmapUrl(null);
-        }
+      if (result.diagnosis === 'Malignant') {
+        setHeatmapLoading(true);
+        pollHeatmap(result.id, setHeatmapUrl, setHeatmapLoading);
       }
 
       const initialPrompt = `Explain briefly and clearly what it means when a deep learning model diagnoses a breast ultrasound as "${result.diagnosis}" with ${result.confidence.toFixed(1)}% confidence. Respond in under 3 sentences and end by inviting the user to ask for more details if needed.`;
