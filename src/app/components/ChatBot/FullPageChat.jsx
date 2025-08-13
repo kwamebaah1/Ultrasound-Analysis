@@ -107,7 +107,7 @@ const FullPageChat = ({ initialMessages, onClose, diagnosis, confidence }) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="Type your question..."
-            className="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 p-3 border border-gray-300 text-black rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             onClick={sendMessage}
