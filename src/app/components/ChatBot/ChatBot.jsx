@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { FiSend, FiMaximize2 } from 'react-icons/fi';
 import MessageBubble from './MessageBubble';
+import FullPageChat from './FullPageChat';
 
 const ChatBot = ({ initialAdvice, diagnosis, confidence }) => {
   const [messages, setMessages] = useState([
