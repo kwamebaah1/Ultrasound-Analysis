@@ -9,7 +9,7 @@ const ProbabilityBar = ({ label, value, color }) => {
     <div className="mb-4">
       <div className="flex justify-between mb-1">
         <span className="font-medium text-gray-700">{label}</span>
-        <span className="font-medium">{value.toFixed(1)}%</span>
+        <span className="font-medium text-gray-700">{value.toFixed(1)}%</span>
       </div>
       <div className="w-full bg-gray-100 rounded-full h-2.5">
         <div 
