@@ -1,78 +1,15 @@
-'use client'
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { FaUpload, FaSpinner, FaChartBar, FaInfoCircle } from 'react-icons/fa';
-import ChatBot from './components/ChatBot';
+import { FaChartBar } from 'react-icons/fa';
+import { FiInfo } from 'react-icons/fi';
+import ChatBot from './components/ChatBot/ChatBot';
+import HeatmapVisualization from './components/Heatmap/HeatmapVisualization';
 import LoadingIndicator from './components/LoadingIndicator';
 import DiagnosisResult from './components/DiagnosisResult';
+import ProbabilityBar from './components/ProbabilityBar';
+import UploadArea from './components/UploadArea';
 import pollHeatmap from './components/Heatmap';
-
-const ProbabilityBar = ({ label, value, color }) => {
-  const gradient = {
-    green: 'from-green-400 to-green-600',
-    red: 'from-red-400 to-red-600',
-    blue: 'from-blue-400 to-blue-600'
-  }[color];
-
-  return (
-    <div className="mb-4">
-      <div className="flex justify-between mb-1">
-        <span className="font-medium text-gray-700">{label}</span>
-        <span className="font-medium">{value.toFixed(1)}%</span>
-      </div>
-      <div className="w-full bg-gray-100 rounded-full h-2.5">
-        <div 
-          className={`bg-gradient-to-r ${gradient} h-2.5 rounded-full`} 
-          style={{ width: `${value}%` }}
-        ></div>
-      </div>
-    </div>
-  );
-};
-
-const UploadArea = ({ preview, triggerFileInput, image, setPreview }) => {
-  return (
-    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center transition-all hover:border-teal-300 hover:bg-teal-50/50">
-      {preview ? (
-        <div className="relative w-full h-64 mb-4 group">
-          <img 
-            src={preview} 
-            alt="Uploaded ultrasound" 
-            className="w-full h-full object-contain rounded-lg shadow-sm"
-          />
-          <button 
-            onClick={() => setPreview('')}
-            className="absolute top-3 right-3 bg-white/90 text-gray-600 rounded-full p-1.5 hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-md"
-          >
-            ×
-          </button>
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <div className="mx-auto mb-4 w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center">
-            <FaUpload className="text-2xl text-teal-600" />
-          </div>
-          <p className="text-gray-500 mb-4">Upload breast ultrasound image</p>
-          <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
-        </div>
-      )}
-      
-      <button
-        onClick={triggerFileInput}
-        className="mt-4 bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-medium py-2.5 px-8 rounded-full flex items-center shadow-md hover:shadow-lg transition-all"
-      >
-        <FaUpload className="mr-2" />
-        {image ? 'Change Image' : 'Select Image'}
-      </button>
-      
-      {image && (
-        <p className="mt-3 text-sm text-gray-500">
-          {image.name} ({(image.size / 1024).toFixed(1)} KB)
-        </p>
-      )}
-    </div>
-  );
-};
 
 export default function Home() {
   const [image, setImage] = useState(null);
@@ -123,6 +60,7 @@ export default function Home() {
     setError('');
     setImage(file);
     setPrediction(null);
+    setHeatmapUrl(null);
     
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target.result);
@@ -250,13 +188,18 @@ export default function Home() {
                     <ProbabilityBar label="Benign" value={prediction.benign} color="green" />
                     <ProbabilityBar label="Malignant" value={prediction.malignant} color="red" />
                   </div>
+                  
                   {heatmapLoading && (
                     <div className="text-center py-4 text-sm text-gray-500">Generating heatmap...</div>
                   )}
+                  
                   {heatmapUrl && (
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-700 mb-2">Heatmap</h3>
-                      <img src={heatmapUrl} alt="Grad-CAM Heatmap" className="w-full rounded-lg shadow-sm" />
+                    <div className="mt-6">
+                      <h3 className="text-lg font-medium text-gray-700 mb-3">Heatmap Visualization</h3>
+                      <HeatmapVisualization 
+                        heatmapUrl={heatmapUrl} 
+                        diagnosis={prediction.diagnosis} 
+                      />
                     </div>
                   )}
                 </div>
@@ -275,7 +218,7 @@ export default function Home() {
                 />
                 
                 <div className="bg-blue-50/70 p-4 rounded-lg text-sm text-blue-800 flex items-start border border-blue-100">
-                  <FaInfoCircle className="mr-2 mt-0.5 flex-shrink-0 text-blue-500" />
+                  <FiInfo className="mr-2 mt-0.5 flex-shrink-0 text-blue-500" />
                   <p>This analysis is for preliminary assessment only. Please consult with a medical professional for definitive diagnosis.</p>
                 </div>
               </div>
