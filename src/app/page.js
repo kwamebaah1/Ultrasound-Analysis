@@ -10,6 +10,7 @@ import DiagnosisResult from './components/DiagnosisResult';
 import ProbabilityBar from './components/ProbabilityBar';
 import UploadArea from './components/UploadArea';
 import pollHeatmap from './components/Heatmap';
+import { API_URL } from './config';
 
 export default function Home() {
   const [image, setImage] = useState(null);
@@ -81,7 +82,7 @@ export default function Home() {
       const formData = new FormData();
       formData.append('image', image);
       
-      const response = await fetch('https://kbaah7-ultrasound-analysis.hf.space/predict', {
+      const response = await fetch(`${API_URL}/predict`, {
         method: 'POST',
         body: formData,
       });
@@ -103,10 +104,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [
-            { role: 'system', content: 'You are a helpful medical assistant who provides brief and clear explanations to patients in simple terms. Keep responses concise and friendly.' },
-            { role: 'user', content: initialPrompt }
-          ]
+          messages: [{ role: 'user', content: initialPrompt }]
         })
       });
 

@@ -35,15 +35,8 @@ const FullPageChat = ({ initialMessages, onClose, diagnosis, confidence }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            messages: [
-            {
-                role: 'system',
-                content: diagnosis && confidence
-                ? `You are a helpful medical assistant. Assume the user is referring to a breast ultrasound diagnosis of "${diagnosis}" with ${confidence.toFixed(1)}% confidence unless otherwise specified. Be empathetic, brief, and guide users clearly.`
-                : 'You are a helpful medical assistant.',
-            },
-            ...filteredMessages
-            ]
+            messages: filteredMessages,
+            context: { diagnosis, confidence },
         }),
         });
 

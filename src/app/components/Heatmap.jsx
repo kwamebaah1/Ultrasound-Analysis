@@ -1,10 +1,12 @@
+import { API_URL } from '../config';
+
 const pollHeatmap = async (id, setHeatmapUrl, setHeatmapLoading) => {
   let attempts = 0;
   const maxAttempts = 15;
   const interval = setInterval(async () => {
     attempts++;
     try {
-      const res = await fetch(`https://kbaah7-ultrasound-analysis.hf.space/heatmap/${id}`);
+      const res = await fetch(`${API_URL}/heatmap/${id}`);
       const data = await res.json();
       if (data.status === 'ready' && data.heatmap) {
         setHeatmapUrl(`data:image/png;base64,${data.heatmap}`);
