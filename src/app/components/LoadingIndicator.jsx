@@ -1,32 +1,39 @@
-import { FaSpinner } from 'react-icons/fa';
+import { FiCheck } from 'react-icons/fi';
 
 const LoadingIndicator = ({ steps, currentStep }) => {
-  const progress = ((steps.indexOf(currentStep) + 1) / steps.length) * 100;
-  
+  const current = Math.max(0, steps.indexOf(currentStep));
+
   return (
-    <div className="flex flex-col items-center justify-center py-8">
-      <div className="relative mb-6 w-16 h-16">
-        <div className="absolute inset-0 rounded-full border-4 border-teal-100"></div>
-        <FaSpinner className="absolute inset-0 m-auto animate-spin text-3xl text-teal-600" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-bold text-teal-700">
-            {Math.floor(progress)}%
-          </span>
-        </div>
-      </div>
-      <p className="text-gray-600 text-center mb-2 max-w-xs">{currentStep}</p>
-      <div className="w-full bg-gray-100 rounded-full h-2 mt-2 max-w-xs">
-        <div 
-          className="bg-gradient-to-r from-teal-500 to-blue-600 h-2 rounded-full" 
-          style={{ 
-            width: `${progress}%`,
-            transition: 'width 0.5s ease-in-out'
-          }}
-        ></div>
-      </div>
-      <p className="text-sm text-gray-500 mt-4">
-        Analyzing with precision...
-      </p>
+    <div className="py-4" aria-live="polite">
+      <p className="mb-4 text-sm font-medium text-slate-900">Analysing image…</p>
+      <ol className="space-y-2.5">
+        {steps.map((step, i) => {
+          const done = i < current;
+          const active = i === current;
+          return (
+            <li key={step} className="flex items-center gap-3 text-sm">
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                  done
+                    ? 'border-brand-600 bg-brand-600 text-white'
+                    : active
+                      ? 'border-brand-600'
+                      : 'border-slate-200'
+                }`}
+              >
+                {done ? (
+                  <FiCheck size={12} aria-hidden />
+                ) : active ? (
+                  <span className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-brand-100 border-t-brand-600" />
+                ) : null}
+              </span>
+              <span className={done ? 'text-slate-500' : active ? 'font-medium text-slate-900' : 'text-slate-400'}>
+                {step}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 };

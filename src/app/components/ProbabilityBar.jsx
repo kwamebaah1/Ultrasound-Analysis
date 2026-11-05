@@ -1,21 +1,29 @@
-const ProbabilityBar = ({ label, value, color }) => {
-  const gradient = {
-    green: 'from-green-400 to-green-600',
-    red: 'from-red-400 to-red-600',
-    blue: 'from-blue-400 to-blue-600'
-  }[color];
+const TONES = {
+  benign: 'bg-benign',
+  malignant: 'bg-malignant',
+};
+
+const ProbabilityBar = ({ label, value, tone }) => {
+  const pct = Math.max(0, Math.min(100, value));
 
   return (
-    <div className="mb-4">
-      <div className="flex justify-between mb-1">
-        <span className="font-medium text-gray-700">{label}</span>
-        <span className="font-medium text-gray-700">{value.toFixed(1)}%</span>
+    <div>
+      <div className="mb-1.5 flex justify-between text-sm">
+        <span className="text-slate-700">{label}</span>
+        <span className="font-medium tabular-nums text-slate-900">{value.toFixed(1)}%</span>
       </div>
-      <div className="w-full bg-gray-100 rounded-full h-2.5">
-        <div 
-          className={`bg-gradient-to-r ${gradient} h-2.5 rounded-full`} 
-          style={{ width: `${value}%` }}
-        ></div>
+      <div
+        className="h-2 w-full overflow-hidden rounded-full bg-slate-100"
+        role="progressbar"
+        aria-label={`${label} probability`}
+        aria-valuenow={Math.round(pct)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          className={`h-full rounded-full ${TONES[tone] ?? 'bg-slate-500'} transition-[width] duration-500`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   );

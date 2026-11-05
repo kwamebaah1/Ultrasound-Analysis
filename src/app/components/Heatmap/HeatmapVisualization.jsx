@@ -1,66 +1,61 @@
 'use client';
 
 import { useState } from 'react';
-import { FiZoomIn, FiZoomOut, FiDownload, FiInfo } from 'react-icons/fi';
+import { FiDownload, FiZoomIn, FiZoomOut } from 'react-icons/fi';
+
+const toolBtn =
+  'inline-flex h-7 w-7 items-center justify-center rounded text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 disabled:hover:bg-transparent';
 
 const HeatmapVisualization = ({ heatmapUrl, diagnosis }) => {
   const [scale, setScale] = useState(1);
-  const [showInfo, setShowInfo] = useState(false);
 
   if (!heatmapUrl) return null;
 
   return (
-    <div className="relative group">
-      <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-        <img
-          src={heatmapUrl}
-          alt="Heatmap visualization"
-          className="w-full h-auto transition-transform duration-300"
-          style={{ transform: `scale(${scale})` }}
-        />
-        
-        <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+    <figure>
+      <div className="overflow-hidden rounded-md border border-slate-200">
+        <div className="flex items-center gap-1 border-b border-slate-200 bg-slate-50 px-2 py-1">
           <button
-            onClick={() => setScale(Math.min(scale + 0.1, 2))}
-            className="p-2 bg-white rounded-full text-gray-700 shadow-md hover:bg-gray-100"
-            title="Zoom in"
+            type="button"
+            onClick={() => setScale((s) => Math.max(+(s - 0.25).toFixed(2), 1))}
+            disabled={scale <= 1}
+            className={toolBtn}
+            aria-label="Zoom out"
           >
-            <FiZoomIn />
+            <FiZoomOut size={14} />
           </button>
+          <span className="w-12 text-center text-xs tabular-nums text-slate-600">{Math.round(scale * 100)}%</span>
           <button
-            onClick={() => setScale(Math.max(scale - 0.1, 0.5))}
-            className="p-2 bg-white rounded-full text-gray-700 shadow-md hover:bg-gray-100"
-            title="Zoom out"
+            type="button"
+            onClick={() => setScale((s) => Math.min(+(s + 0.25).toFixed(2), 2.5))}
+            disabled={scale >= 2.5}
+            className={toolBtn}
+            aria-label="Zoom in"
           >
-            <FiZoomOut />
+            <FiZoomIn size={14} />
           </button>
           <a
             href={heatmapUrl}
             download={`heatmap-${diagnosis.toLowerCase()}.png`}
-            className="p-2 bg-white rounded-full text-gray-700 shadow-md hover:bg-gray-100"
-            title="Download"
+            className="ml-auto inline-flex h-7 items-center gap-1.5 rounded px-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           >
-            <FiDownload />
+            <FiDownload size={13} aria-hidden /> Download
           </a>
-          <button
-            onClick={() => setShowInfo(!showInfo)}
-            className="p-2 bg-white rounded-full text-gray-700 shadow-md hover:bg-gray-100"
-            title="Info"
-          >
-            <FiInfo />
-          </button>
+        </div>
+        <div className="flex justify-center overflow-hidden bg-slate-100">
+          <img
+            src={heatmapUrl}
+            alt="Grad-CAM heatmap overlaid on the ultrasound image"
+            className="aspect-square w-full max-w-sm origin-center object-contain transition-transform duration-200"
+            style={{ transform: `scale(${scale})` }}
+          />
         </div>
       </div>
-
-      {showInfo && (
-        <div className="mt-2 p-3 bg-blue-50 text-blue-800 rounded-lg text-sm">
-          <p>
-            This heatmap shows the areas of the image that most influenced the AI's diagnosis.
-            Warmer colors indicate regions with higher importance in the decision-making process.
-          </p>
-        </div>
-      )}
-    </div>
+      <figcaption className="mt-2 text-xs leading-relaxed text-slate-500">
+        Highlighted regions most influenced the model&apos;s decision. Warmer colours (red, yellow)
+        indicate greater influence.
+      </figcaption>
+    </figure>
   );
 };
 

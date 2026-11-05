@@ -1,23 +1,28 @@
 'use client';
 
-import { FiUser, FiMessageSquare } from 'react-icons/fi';
+const MessageBubble = ({ message, isLoading }) => {
+  const isUser = message.role === 'user';
 
-const MessageBubble = ({ message, isFirst, isLoading }) => {
   return (
-    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex max-w-[85%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start gap-2`}>
-        <div className={`mt-1 flex-shrink-0 ${message.role === 'user' ? 'text-blue-600' : 'text-teal-600'}`}>
-          {message.role === 'user' ? <FiUser size={14} /> : <FiMessageSquare size={14} />}
-        </div>
-        <div
-          className={`px-3 py-2 rounded-lg text-sm ${
-            message.role === 'user'
-              ? 'bg-blue-100 text-blue-900 rounded-br-none'
-              : 'bg-gray-100 text-gray-800 rounded-bl-none'
-          } ${isLoading ? 'animate-pulse' : ''}`}
-        >
-          {isLoading && !message.content ? '...' : message.content}
-        </div>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div
+        className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
+          isUser ? 'bg-brand-600 text-white' : 'border border-slate-200 bg-slate-50 text-slate-800'
+        }`}
+      >
+        {isLoading ? (
+          <span className="flex gap-1 py-1" aria-label="Assistant is typing">
+            {[0, 150, 300].map((d) => (
+              <span
+                key={d}
+                className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
+                style={{ animationDelay: `${d}ms` }}
+              />
+            ))}
+          </span>
+        ) : (
+          <span className="whitespace-pre-wrap">{message.content}</span>
+        )}
       </div>
     </div>
   );
